@@ -1,0 +1,126 @@
+防火墙:
+端口转发firewall-cmd --permanent --zone=trusted --add-forward-port=port=5423:proto=tcp:toport=80
+--permanent永久生效
+网卡链路聚合:
+nmcli connection add con-name team0 type team ifname team0 config '{ "runner":{ "name":"activebackup" } }'
+'{ "runner":{ "name":"activebackup" } }'  使用man teamd.conf 来查找
+
+邮件服务:
+配置文件:/etc/postfix/main.cf,修改以下内容
+relayhost = [smtp0.example.com]
+inet_interfaces = loopback-only	
+myorigin = desktop0.example.com
+mynetworks = 127.0.0.0/8 [::1]/128
+mydestination =
+
+
+samba 服务端:
+服务名samba
+setsebool -P samba_export_all_rw=on	//取消 SELinux 限制
+[root@serverX ~]# useradd harry ; pdbedit -a harry	//启用共享账号并设密码
+配置文件目录:/etc/samba/smb.conf 
+修改项:
+[global]
+workgroup = STAFF	//所属组,按照题目要求修改
+.. ..
+[common]
+path = /common	//共享路径
+hosts allow = 172.25.0.0/24	//允许访问网段
+
+
+
+
+
+samba多用户服务端:
+创建共享目录:mkdir /devops 	//根据题意
+创建访问用户 useradd kenji 	//根据题意创建
+启用该共享帐号并设置密码 pdbedit -a kenji 	
+
+通过acl修改目录访问权限	setfacl -m u:chihiro:rwx /devops/
+
+配置文件:/etc/samba/smb.conf 
+[devops]		//共享名
+path = /devops	//共享路径
+write list = chihiro		//用户可读权限列表
+hosts allow = 172.25.0.0/24	
+
+setsebool -P samba_export_all_rw=on	//取消 SELinux 限制
+
+##samba访问权限受selinux  目录本身权限  samba服务自带权限控制 
+samba服务守护进程名:smb 系统重启命令
+systemclt restart smb
+
+
+
+
+
+samba 客户端 
+安装包:samba-client cifs-utils
+服务端配置完成后用该命令查看共享目录:smbclient -L serverX
+将共享目录挂在到本地:修改/etc/fstab
+//serverX.example.com/devops  /mnt/dev  cifs  username=kenji,password=atenorth,multiuser,sec=ntlmssp,_netdev 0 0
+ 
+验证实验是否成功:在客户端创建普通用户,并以该用户向服务器提供访问用户认证凭据(即chihiro帐号密码)
+[root@desktop0~]useradd mike
+[root@desktop0~]su - mike
+[mike@desktop0~]cifscreds add -u chihiro server0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
